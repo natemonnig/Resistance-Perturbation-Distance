@@ -47,8 +47,8 @@ for i=1:length(Ns)
     disp(size(e1))
     
     tic
-%     distance_approx=drp2_approx(e1,e2);
-    distance_approx=drp2_approx_v2(e1,e2);
+    distance_approx=drp2_approx(e1,e2);
+%     distance_approx=drp2_approx_v2(e1,e2);
     times(i)=toc;
     ms1(i)=size(e1,1);
     ms2(i)=size(e2,1);

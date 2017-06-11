@@ -88,12 +88,16 @@ RP2_dist=zeros(numweeks,1);
 RP2_dist_rel=zeros(numweeks,1);
 edit_dist=zeros(numweeks,1);
 edit_dist_rel=zeros(numweeks,1);
+deltacon_dist=zeros(numweeks,1);
+deltacon_dist_rel=zeros(numweeks,1);
 for i=2:numweeks
     RP1_dist(i)=sum(sum(abs(R(:,:,i)-R(:,:,i-1))));
     RP1_dist_rel(i)=RP1_dist(i)/sum(sum(abs(R(:,:,i-1))));
     RP2_dist(i)=norm(R(:,:,i)-R(:,:,i-1),'fro');
 %     RP2_dist_rel(i)=RP2_dist(i)/norm(R(:,:,i-1),'fro');
     RP2_dist_rel(i)=RP2_dist(i)/sum(sum(abs(R(:,:,i-1))));
+    [deltacon_dist(i),S1,S2]=deltacon0(A_all(:,:,i),A_all(:,:,i-1));
+    deltacon_dist_rel(i)=deltacon_dist(i)/norm(S2.^(1/2),'fro');
     edit_dist(i)=sum(sum(abs(A_all(:,:,i)-A_all(:,:,i-1))));
     if sum(sum(abs(A_all(:,:,i-1))))>0
         edit_dist_rel(i)=edit_dist(i)/sum(sum(abs(A_all(:,:,i-1))));
@@ -102,25 +106,26 @@ for i=2:numweeks
     end
 end
 
-RP1_dist_ALL=zeros(numweeks,numweeks);
-for i=1:numweeks
-    for j=1:numweeks
-        RP1_dist_ALL(i,j)=sum(sum(abs(R(:,:,i)-R(:,:,j))));
-    end
-end
-
-figure
-imagesc(RP1_dist_ALL)
-title('RP-1 distance between weeks, Reality Mining')
+% RP1_dist_ALL=zeros(numweeks,numweeks);
+% for i=1:numweeks
+%     for j=1:numweeks
+%         RP1_dist_ALL(i,j)=sum(sum(abs(R(:,:,i)-R(:,:,j))));
+%     end
+% end
+% 
+% figure
+% imagesc(RP1_dist_ALL)
+% title('RP-1 distance between weeks, Reality Mining')
 %%
 
 figure
 hold on
 for i=2:length(mondays)-1
-% %     plot([mondays(i),mondays(i)+7],[RP1_dist(i),RP1_dist(i)],'k','LineWidth',2)
-%     plot([mondays(i),mondays(i)+7],[RP1_dist(i),RP1_dist(i)]./max(RP1_dist),'r','LineWidth',3)
-%     plot([mondays(i),mondays(i)+7],[RP2_dist(i),RP2_dist(i)]./max(RP2_dist),'k','LineWidth',1.5)
-    plot([mondays(i),mondays(i)+7],[edit_dist(i),edit_dist(i)]./max(edit_dist),'b','LineWidth',1.5)
+%     plot([mondays(i),mondays(i)+7],[RP1_dist(i),RP1_dist(i)],'k','LineWidth',2)
+    plot([mondays(i),mondays(i)+7],[RP1_dist(i),RP1_dist(i)]./max(RP1_dist),'r','LineWidth',3)
+    plot([mondays(i),mondays(i)+7],[RP2_dist(i),RP2_dist(i)]./max(RP2_dist),'k','LineWidth',1.5)
+%     plot([mondays(i),mondays(i)+7],[edit_dist(i),edit_dist(i)]./max(edit_dist),'b','LineWidth',1.5)
+%     plot([mondays(i),mondays(i)+7],[deltacon_dist(i),deltacon_dist(i)]./max(deltacon_dist),'b','LineWidth',1.5)
 end
 ybounds=ylim;
 ylim([0,1.5*ybounds(2)]);
@@ -140,19 +145,53 @@ end
 xlim([min(mondays),max(mondays)])
 xticklabel_rotate(mondays,60,cellstr(datestr(mondays,2)))
 xlabel('Date')
-% ylabel('d_{rp}(G_t,G_{t-1}) (normalized by maximum)')
-ylabel('||A_t-A_{t-1}||_1 (normalized by maximum)')
+ylabel('d_{rp}(G_t,G_{t-1}) (normalized by maximum)')
+% ylabel('||A_t-A_{t-1}||_1 (normalized by maximum)')
 box on
-% legend('RP1 Distance','RP2 Distance','edit distance')
-legend('edit distance')
+legend('RP1 Distance','RP2 Distance')
+% legend('edit distance')
 
 figure
 hold on
 for i=2:length(mondays)-1
-% %     plot([mondays(i),mondays(i)+7],[RP1_dist_rel(i),RP1_dist_rel(i)],'k','LineWidth',2)
-%     plot([mondays(i),mondays(i)+7],[RP1_dist_rel(i),RP1_dist_rel(i)]./max(RP1_dist_rel),'r','LineWidth',3)
-%     plot([mondays(i),mondays(i)+7],[RP2_dist_rel(i),RP2_dist_rel(i)]./max(RP2_dist_rel),'k','LineWidth',1.5)
-    plot([mondays(i),mondays(i)+7],[edit_dist_rel(i),edit_dist_rel(i)]./max(edit_dist_rel),'b','LineWidth',1.5)
+%     plot([mondays(i),mondays(i)+7],[RP1_dist(i),RP1_dist(i)],'k','LineWidth',2)
+%     plot([mondays(i),mondays(i)+7],[RP1_dist(i),RP1_dist(i)]./max(RP1_dist),'r','LineWidth',3)
+%     plot([mondays(i),mondays(i)+7],[RP2_dist(i),RP2_dist(i)]./max(RP2_dist),'k','LineWidth',1.5)
+%     plot([mondays(i),mondays(i)+7],[edit_dist(i),edit_dist(i)]./max(edit_dist),'b','LineWidth',1.5)
+    plot([mondays(i),mondays(i)+7],[deltacon_dist(i),deltacon_dist(i)]./max(deltacon_dist),'b','LineWidth',1.5)
+end
+ybounds=ylim;
+ylim([0,1.5*ybounds(2)]);
+ybounds=ylim;
+xbounds=xlim;
+load('data/reality_timeline.mat');
+dates=cell2mat(reality_timeline(:,1))+datenum(1899,12,30);
+cmap=hsv(length(dates));
+deltaytext=0.046;
+for i=1:size(reality_timeline,1)
+    plot([dates(i),dates(i)],[0,ybounds(2)],'Color',cmap(i,:))
+end
+for i=1:size(reality_timeline,1)
+    text(dates(i)+1.2,ybounds(2)*(1-(rem(i-1,5)+1)*deltaytext),reality_timeline{i,2},...
+        'EdgeColor',cmap(i,:),'FontSize',8,'BackgroundColor','w');
+end
+xlim([min(mondays),max(mondays)])
+xticklabel_rotate(mondays,60,cellstr(datestr(mondays,2)))
+xlabel('Date')
+ylabel('d_{DC0}(G_t,G_{t-1}) (normalized by maximum)')
+% ylabel('||A_t-A_{t-1}||_1 (normalized by maximum)')
+box on
+% legend('RP1 Distance','RP2 Distance','edit distance')
+legend('DeltaCon_0 Distance')
+
+figure
+hold on
+for i=2:length(mondays)-1
+%     plot([mondays(i),mondays(i)+7],[RP1_dist_rel(i),RP1_dist_rel(i)],'k','LineWidth',2)
+    plot([mondays(i),mondays(i)+7],[RP1_dist_rel(i),RP1_dist_rel(i)]./max(RP1_dist_rel),'r','LineWidth',3)
+    plot([mondays(i),mondays(i)+7],[RP2_dist_rel(i),RP2_dist_rel(i)]./max(RP2_dist_rel),'k','LineWidth',1.5)
+%     plot([mondays(i),mondays(i)+7],[edit_dist_rel(i),edit_dist_rel(i)]./max(edit_dist_rel),'b','LineWidth',1.5)
+%     plot([mondays(i),mondays(i)+7],[deltacon_dist_rel(i),deltacon_dist_rel(i)]./max(deltacon_dist_rel),'b','LineWidth',1.5)
 end
 ybounds=ylim;
 ylim([0,1.5*ybounds(2)]);
@@ -174,8 +213,40 @@ xticklabel_rotate(mondays,60,cellstr(datestr(mondays,2)))
 xlabel('Date')
 ylabel('d_{rp}(G_t,G_{t-1})/Kf(R_{t-1}) (normalized by maximum)')
 box on
-% legend('RP1 Distance','RP2 Distance','edit distance')
-legend('edit distance')
+legend('RP1 Distance','RP2 Distance')
+% legend('edit distance')
+
+figure
+hold on
+for i=2:length(mondays)-1
+% %     plot([mondays(i),mondays(i)+7],[RP1_dist_rel(i),RP1_dist_rel(i)],'k','LineWidth',2)
+%     plot([mondays(i),mondays(i)+7],[RP1_dist_rel(i),RP1_dist_rel(i)]./max(RP1_dist_rel),'r','LineWidth',3)
+%     plot([mondays(i),mondays(i)+7],[RP2_dist_rel(i),RP2_dist_rel(i)]./max(RP2_dist_rel),'k','LineWidth',1.5)
+%     plot([mondays(i),mondays(i)+7],[edit_dist_rel(i),edit_dist_rel(i)]./max(edit_dist_rel),'b','LineWidth',1.5)
+    plot([mondays(i),mondays(i)+7],[deltacon_dist_rel(i),deltacon_dist_rel(i)]./max(deltacon_dist_rel),'b','LineWidth',1.5)
+end
+ybounds=ylim;
+ylim([0,1.5*ybounds(2)]);
+ybounds=ylim;
+xbounds=xlim;
+load('data/reality_timeline.mat');
+dates=cell2mat(reality_timeline(:,1))+datenum(1899,12,30);
+cmap=hsv(length(dates));
+deltaytext=0.046;
+for i=1:size(reality_timeline,1)
+    plot([dates(i),dates(i)],[0,ybounds(2)],'Color',cmap(i,:))
+end
+for i=1:size(reality_timeline,1)
+    text(dates(i)+1.2,ybounds(2)*(1-(rem(i-1,5)+1)*deltaytext),reality_timeline{i,2},...
+        'EdgeColor',cmap(i,:),'FontSize',8,'BackgroundColor','w');
+end
+xlim([min(mondays),max(mondays)])
+xticklabel_rotate(mondays,60,cellstr(datestr(mondays,2)))
+xlabel('Date')
+ylabel('d_{DC0}(G_t,G_{t-1})/||S_{t-1}^{1/2}||_F (normalized by maximum)')
+box on
+% legend('RP1 Distance','RP2 Distance')
+legend('DeltaCon_0 Distance')
 
 % figure
 % scatter(mondays(2:end),dresist(2:end))

@@ -1,4 +1,4 @@
-function [ d_DC0 ] = deltacon0(A1,A2)
+function [ d_DC0, S1, S2 ] = deltacon0(A1,A2)
 % function to compute the DeltaCon_0 distance between two graphs
 % input dense adjacency matrices:
 % eqn. 3.3 in Koutra et al. (2013) http://arxiv.org/pdf/1304.4657v1.pdf
