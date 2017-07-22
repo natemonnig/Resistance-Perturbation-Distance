@@ -9,7 +9,7 @@ clc; clear all; close all;
 N=2000;
 
 % choose type of random graph
-graphtype=3;
+graphtype=1;
 % type 1 = two community block model (change Pout)
 % type 2 = latent space model on unit circle (change std dev of angle
 %               changes)
@@ -20,7 +20,8 @@ nreps=50;
 nparams=11;
 RP1_dist=zeros(nparams,nreps);
 RP2_dist=zeros(nparams,nreps);
-edit_dist=zeros(nparams,nreps);
+DeltaCon0_dist=zeros(nparams,nreps);
+CAD_dist=zeros(nparams,nreps);
 
 for rep_num=1:nreps
 disp(strcat('Rep number = ',num2str(rep_num),' of ',num2str(nreps)))
@@ -67,7 +68,7 @@ end
 disp(0)
 Ldag=pinv(L0);
 R0=diag(Ldag)*ones(1,N)+ones(N,1)*diag(Ldag)'-2*Ldag;
-
+A0=diag(diag(L0))-L0;
 
 for l=1:nparams
     disp(l)
@@ -85,47 +86,53 @@ for l=1:nparams
         
     Ldag=pinv(L1);
     R1=diag(Ldag)*ones(1,N)+ones(N,1)*diag(Ldag)'-2*Ldag;
+    A1=diag(diag(L1))-L1;
     % measure Resistance Perturbation Distance
     RP1_dist(l,rep_num)=norm(R0(:)-R1(:),1);
     RP2_dist(l,rep_num)=norm(R0-R1,'fro');
-    edit_dist(l,rep_num)=norm(reshape((diag(diag(L0))-L0)-(diag(diag(L1))-L1),N^2,1),1);
+    DeltaCon0_dist(l,rep_num)=deltacon0(A0,A1);
+    CAD_dist(l,rep_num)=CAD_distance(A0,A1,R0,R1);
 end
 
 RP1_dist(:,rep_num)=RP1_dist(:,rep_num)./max(RP1_dist(:,rep_num));
 RP2_dist(:,rep_num)=RP2_dist(:,rep_num)./max(RP2_dist(:,rep_num));
-edit_dist(:,rep_num)=edit_dist(:,rep_num)./max(edit_dist(:,rep_num));
+DeltaCon0_dist(:,rep_num)=DeltaCon0_dist(:,rep_num)./max(DeltaCon0_dist(:,rep_num));
+CAD_dist(:,rep_num)=CAD_dist(:,rep_num)./max(CAD_dist(:,rep_num));
 end
 
 figure % error bars are standard deviation
 if graphtype==1
-    errorbar((Pouts-Pout0)',mean(RP1_dist,2),std(RP1_dist')')
+    errorbar((Pouts-Pout0)',mean(RP1_dist,2),std(RP1_dist')','k')
     hold on
-    errorbar((Pouts-Pout0)',mean(RP2_dist,2),std(RP2_dist')')
-    errorbar((Pouts-Pout0)',mean(edit_dist,2),std(edit_dist')')
+    errorbar((Pouts-Pout0)',mean(RP2_dist,2),std(RP2_dist')','r')
+    errorbar((Pouts-Pout0)',mean(DeltaCon0_dist,2),std(DeltaCon0_dist')','b')
+    errorbar((Pouts-Pout0)',mean(CAD_dist,2),std(CAD_dist')','g')
     xlabel('\Delta P_{out}')
     maxxval=max(Pouts-Pout0);
-    plot([0 maxxval],[0 1],'k')
+    plot([0 maxxval],[0 1],'y')
 elseif graphtype==2
-    errorbar(deltas',mean(RP1_dist,2),std(RP1_dist')')
+    errorbar(deltas',mean(RP1_dist,2),std(RP1_dist')','k')
     hold on
-    errorbar(deltas',mean(RP2_dist,2),std(RP2_dist')')
-    errorbar(deltas',mean(edit_dist,2),std(edit_dist')')
+    errorbar(deltas',mean(RP2_dist,2),std(RP2_dist')','r')
+    errorbar(deltas',mean(DeltaCon0_dist,2),std(DeltaCon0_dist')','b')
+    errorbar(deltas',mean(CAD_dist,2),std(CAD_dist')','g')
     xlabel('\sigma')
     maxxval=max(deltas);
-    plot([0 maxxval],[0 1],'k')
+    plot([0 maxxval],[0 1],'y')
 elseif graphtype==3
-    errorbar((betas-beta0)',mean(RP1_dist,2),std(RP1_dist')')
+    errorbar((betas-beta0)',mean(RP1_dist,2),std(RP1_dist')','k')
     hold on
-    errorbar((betas-beta0)',mean(RP2_dist,2),std(RP2_dist')')
-    errorbar((betas-beta0)',mean(edit_dist,2),std(edit_dist')')
+    errorbar((betas-beta0)',mean(RP2_dist,2),std(RP2_dist')','r')
+    errorbar((betas-beta0)',mean(DeltaCon0_dist,2),std(DeltaCon0_dist')','b')
+    errorbar((betas-beta0)',mean(CAD_dist,2),std(CAD_dist')','g')
     xlabel('\Delta \beta')
     maxxval=max(betas-beta0);
-    plot([0 maxxval],[0 1],'k')
+    plot([0 maxxval],[0 1],'y')
 end
 
 ylabel('d_{RP}(G^{(0)},G^{(1)}) (normalized by max)')
 % legend('Resistance Perturbation Distance','Edit Distance','Perfect Correlation')
-legend('RP-1 Distance','RP-2 Distance','Edit Distance','Perfect Correlation')
+legend('RP-1 Distance','RP-2 Distance','DeltaCon_0 Distance','CAD Distance','Perfect Correlation')
 ylim([0 1])
 xlim([0 maxxval])
 box on
@@ -133,34 +140,37 @@ box on
 
 figure % error bars are full range of data
 if graphtype==1
-    errorbar((Pouts-Pout0)',mean(RP1_dist,2),mean(RP1_dist,2)-min(RP1_dist,[],2),max(RP1_dist,[],2)-mean(RP1_dist,2))
+    errorbar((Pouts-Pout0)',mean(RP1_dist,2),mean(RP1_dist,2)-min(RP1_dist,[],2),max(RP1_dist,[],2)-mean(RP1_dist,2),'k')
     hold on
-    errorbar((Pouts-Pout0)',mean(RP2_dist,2),mean(RP2_dist,2)-min(RP2_dist,[],2),max(RP2_dist,[],2)-mean(RP2_dist,2))
-    errorbar((Pouts-Pout0)',mean(edit_dist,2),mean(edit_dist,2)-min(edit_dist,[],2),max(edit_dist,[],2)-mean(edit_dist,2))
+    errorbar((Pouts-Pout0)',mean(RP2_dist,2),mean(RP2_dist,2)-min(RP2_dist,[],2),max(RP2_dist,[],2)-mean(RP2_dist,2),'r')
+    errorbar((Pouts-Pout0)',mean(DeltaCon0_dist,2),mean(DeltaCon0_dist,2)-min(DeltaCon0_dist,[],2),max(DeltaCon0_dist,[],2)-mean(DeltaCon0_dist,2),'b')
+    errorbar((Pouts-Pout0)',mean(CAD_dist,2),mean(CAD_dist,2)-min(CAD_dist,[],2),max(CAD_dist,[],2)-mean(CAD_dist,2),'g')
     xlabel('\Delta P_{out}')
     maxxval=max(Pouts-Pout0);
-    plot([0 maxxval],[0 1],'k')
+    plot([0 maxxval],[0 1],'y')
 elseif graphtype==2
-    errorbar(deltas',mean(RP1_dist,2),mean(RP1_dist,2)-min(RP1_dist,[],2),max(RP1_dist,[],2)-mean(RP1_dist,2))
+    errorbar(deltas',mean(RP1_dist,2),mean(RP1_dist,2)-min(RP1_dist,[],2),max(RP1_dist,[],2)-mean(RP1_dist,2),'k')
     hold on
-    errorbar(deltas',mean(RP2_dist,2),mean(RP2_dist,2)-min(RP2_dist,[],2),max(RP2_dist,[],2)-mean(RP2_dist,2))
-    errorbar(deltas',mean(edit_dist,2),mean(edit_dist,2)-min(edit_dist,[],2),max(edit_dist,[],2)-mean(edit_dist,2))
+    errorbar(deltas',mean(RP2_dist,2),mean(RP2_dist,2)-min(RP2_dist,[],2),max(RP2_dist,[],2)-mean(RP2_dist,2),'r')
+    errorbar(deltas',mean(DeltaCon0_dist,2),mean(DeltaCon0_dist,2)-min(DeltaCon0_dist,[],2),max(DeltaCon0_dist,[],2)-mean(DeltaCon0_dist,2),'b')
+    errorbar(deltas',mean(CAD_dist,2),mean(CAD_dist,2)-min(CAD_dist,[],2),max(CAD_dist,[],2)-mean(CAD_dist,2),'g')
     xlabel('\sigma')
     maxxval=max(deltas);
-    plot([0 maxxval],[0 1],'k')
+    plot([0 maxxval],[0 1],'y')
 elseif graphtype==3
-    errorbar((betas-beta0)',mean(RP1_dist,2),mean(RP1_dist,2)-min(RP1_dist,[],2),max(RP1_dist,[],2)-mean(RP1_dist,2))
+    errorbar((betas-beta0)',mean(RP1_dist,2),mean(RP1_dist,2)-min(RP1_dist,[],2),max(RP1_dist,[],2)-mean(RP1_dist,2),'k')
     hold on
-    errorbar((betas-beta0)',mean(RP2_dist,2),mean(RP2_dist,2)-min(RP2_dist,[],2),max(RP2_dist,[],2)-mean(RP2_dist,2))
-    errorbar((betas-beta0)',mean(edit_dist,2),mean(edit_dist,2)-min(edit_dist,[],2),max(edit_dist,[],2)-mean(edit_dist,2))
+    errorbar((betas-beta0)',mean(RP2_dist,2),mean(RP2_dist,2)-min(RP2_dist,[],2),max(RP2_dist,[],2)-mean(RP2_dist,2),'r')
+    errorbar((betas-beta0)',mean(DeltaCon0_dist,2),mean(DeltaCon0_dist,2)-min(DeltaCon0_dist,[],2),max(DeltaCon0_dist,[],2)-mean(DeltaCon0_dist,2),'b')
+    errorbar((betas-beta0)',mean(CAD_dist,2),mean(CAD_dist,2)-min(CAD_dist,[],2),max(CAD_dist,[],2)-mean(CAD_dist,2),'g')
     xlabel('\Delta \beta')
     maxxval=max(betas-beta0);
-    plot([0 maxxval],[0 1],'k')
+    plot([0 maxxval],[0 1],'y')
 end
 
 ylabel('d_{RP}(G^{(0)},G^{(1)}) (normalized by max)')
 % legend('Resistance Perturbation Distance','Edit Distance','Perfect Correlation')
-legend('RP-1 Distance','RP-2 Distance','Edit Distance','Perfect Correlation')
+legend('RP-1 Distance','RP-2 Distance','DeltaCon_0 Distance','CAD Distance','Perfect Correlation')
 ylim([0 1])
 xlim([0 maxxval])
 box on

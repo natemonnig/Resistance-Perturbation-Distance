@@ -90,6 +90,8 @@ edit_dist=zeros(numweeks,1);
 edit_dist_rel=zeros(numweeks,1);
 deltacon_dist=zeros(numweeks,1);
 deltacon_dist_rel=zeros(numweeks,1);
+CAD_dist=zeros(numweeks,1);
+CAD_dist_rel=zeros(numweeks,1);
 for i=2:numweeks
     RP1_dist(i)=sum(sum(abs(R(:,:,i)-R(:,:,i-1))));
     RP1_dist_rel(i)=RP1_dist(i)/sum(sum(abs(R(:,:,i-1))));
@@ -103,6 +105,14 @@ for i=2:numweeks
         edit_dist_rel(i)=edit_dist(i)/sum(sum(abs(A_all(:,:,i-1))));
     else
         edit_dist_rel(i)=0;
+    end
+    commute_i = sum(sum(A_all(:,:,i)))*R(:,:,i);
+    commute_j = sum(sum(A_all(:,:,i-1)))*R(:,:,i-1);
+    CAD_dist(i)=sum(sum( abs(A_all(:,:,i)-A_all(:,:,i-1)).*abs(commute_i - commute_j) ));
+    if sum(sum(commute_j))>0
+        CAD_dist_rel(i)=CAD_dist(i)/sum(sum(commute_j));
+    else
+        CAD_dist_rel(i)=0;
     end
 end
 
@@ -159,6 +169,7 @@ for i=2:length(mondays)-1
 %     plot([mondays(i),mondays(i)+7],[RP2_dist(i),RP2_dist(i)]./max(RP2_dist),'k','LineWidth',1.5)
 %     plot([mondays(i),mondays(i)+7],[edit_dist(i),edit_dist(i)]./max(edit_dist),'b','LineWidth',1.5)
     plot([mondays(i),mondays(i)+7],[deltacon_dist(i),deltacon_dist(i)]./max(deltacon_dist),'b','LineWidth',1.5)
+    plot([mondays(i),mondays(i)+7],[CAD_dist(i),CAD_dist(i)]./max(CAD_dist),'g','LineWidth',1.5)
 end
 ybounds=ylim;
 ylim([0,1.5*ybounds(2)]);
@@ -178,11 +189,11 @@ end
 xlim([min(mondays),max(mondays)])
 xticklabel_rotate(mondays,60,cellstr(datestr(mondays,2)))
 xlabel('Date')
-ylabel('d_{DC0}(G_t,G_{t-1}) (normalized by maximum)')
+ylabel('d(G_t,G_{t-1}) (normalized by maximum)')
 % ylabel('||A_t-A_{t-1}||_1 (normalized by maximum)')
 box on
 % legend('RP1 Distance','RP2 Distance','edit distance')
-legend('DeltaCon_0 Distance')
+legend('DeltaCon_0 Distance','CAD Distance')
 
 figure
 hold on
@@ -224,6 +235,7 @@ for i=2:length(mondays)-1
 %     plot([mondays(i),mondays(i)+7],[RP2_dist_rel(i),RP2_dist_rel(i)]./max(RP2_dist_rel),'k','LineWidth',1.5)
 %     plot([mondays(i),mondays(i)+7],[edit_dist_rel(i),edit_dist_rel(i)]./max(edit_dist_rel),'b','LineWidth',1.5)
     plot([mondays(i),mondays(i)+7],[deltacon_dist_rel(i),deltacon_dist_rel(i)]./max(deltacon_dist_rel),'b','LineWidth',1.5)
+    plot([mondays(i),mondays(i)+7],[CAD_dist_rel(i),CAD_dist_rel(i)]./max(CAD_dist_rel),'g','LineWidth',1.5)
 end
 ybounds=ylim;
 ylim([0,1.5*ybounds(2)]);
@@ -243,10 +255,10 @@ end
 xlim([min(mondays),max(mondays)])
 xticklabel_rotate(mondays,60,cellstr(datestr(mondays,2)))
 xlabel('Date')
-ylabel('d_{DC0}(G_t,G_{t-1})/||S_{t-1}^{1/2}||_F (normalized by maximum)')
+ylabel('d(G_t,G_{t-1})/||S_{t-1}^{1/2}||_F (normalized by maximum)')
 box on
 % legend('RP1 Distance','RP2 Distance')
-legend('DeltaCon_0 Distance')
+legend('DeltaCon_0 Distance','CAD Distance')
 
 % figure
 % scatter(mondays(2:end),dresist(2:end))

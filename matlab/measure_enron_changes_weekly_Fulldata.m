@@ -65,6 +65,8 @@ edit_dist=zeros(nweeks,1);
 edit_dist_rel=zeros(nweeks,1);
 deltacon_dist=zeros(nweeks,1);
 deltacon_dist_rel=zeros(nweeks,1);
+CAD_dist=zeros(nweeks,1);
+CAD_dist_rel=zeros(nweeks,1);
 for i=2:nweeks
     RP1_dist(i)=sum(sum(abs(R(:,:,i)-R(:,:,i-1))));
     RP1_dist_rel(i)=RP1_dist(i)/sum(sum(abs(R(:,:,i-1))));
@@ -77,6 +79,14 @@ for i=2:nweeks
         edit_dist_rel(i)=edit_dist(i)/sum(sum(abs(A_all(:,:,i-1))));
     else
         edit_dist_rel(i)=0;
+    end
+    commute_i = sum(sum(A_all(:,:,i)))*R(:,:,i);
+    commute_j = sum(sum(A_all(:,:,i-1)))*R(:,:,i-1);
+    CAD_dist(i)=sum(sum( abs(A_all(:,:,i)-A_all(:,:,i-1)).*abs(commute_i - commute_j) ));
+    if sum(sum(commute_j))>0
+        CAD_dist_rel(i)=CAD_dist(i)/sum(sum(commute_j));
+    else
+        CAD_dist_rel(i)=0;
     end
 end
 
@@ -119,6 +129,7 @@ for i=2:length(mondays)-1
 %     plot([mondays(i),mondays(i)+7],[RP2_dist(i),RP2_dist(i)]./max(RP2_dist),'k','LineWidth',1.5)
 %     plot([mondays(i),mondays(i)+7],[edit_dist(i),edit_dist(i)]./max(edit_dist(1:end-1)),'b','LineWidth',1.5)
     plot([mondays(i),mondays(i)+7],[deltacon_dist(i),deltacon_dist(i)]./max(deltacon_dist(1:end-1)),'b','LineWidth',1.5)
+    plot([mondays(i),mondays(i)+7],[CAD_dist(i),CAD_dist(i)]./max(CAD_dist(1:end-1)),'g','LineWidth',1.5)
 end
 ybounds=ylim;
 ylim([ybounds(1),2*ybounds(2)]);
@@ -138,9 +149,9 @@ end
 xlim([min(mondays),max(mondays)])
 xticklabel_rotate(mondays(1:4:end),60,cellstr(datestr(mondays(1:4:end),2)))
 xlabel('Date')
-ylabel('d_{DC0}(G_t,G_{t-1}) (normalized by maximum)')
+ylabel('d(G_t,G_{t-1}) (normalized by maximum)')
 box on
-legend('DeltaCon_0 Distance')
+legend('DeltaCon_0 Distance','CAD Distance')
 
 figure(3)
 hold on
@@ -179,6 +190,7 @@ for i=2:length(mondays)-1
 %     plot([mondays(i),mondays(i)+7],[RP2_dist_rel(i),RP2_dist_rel(i)]./max(RP2_dist_rel),'k','LineWidth',1.5)
 %     plot([mondays(i),mondays(i)+7],[edit_dist_rel(i),edit_dist_rel(i)]./max(edit_dist_rel(1:end-1)),'b','LineWidth',1.5)
     plot([mondays(i),mondays(i)+7],[deltacon_dist_rel(i),deltacon_dist_rel(i)]./max(deltacon_dist_rel(1:end-1)),'b','LineWidth',1.5)
+    plot([mondays(i),mondays(i)+7],[CAD_dist_rel(i),CAD_dist_rel(i)]./max(CAD_dist_rel(1:end-1)),'g','LineWidth',1.5)
 end
 ybounds=ylim;
 ylim([ybounds(1),2*ybounds(2)]);
