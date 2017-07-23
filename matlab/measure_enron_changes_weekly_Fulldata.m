@@ -92,7 +92,7 @@ end
 
 mondays=min(allmondays):7:max(allmondays);
 
-figure(1)
+RP_non_norm = figure(1);
 hold on
 for i=2:length(mondays)-1
     plot([mondays(i),mondays(i)+7],[RP1_dist(i),RP1_dist(i)]./max(RP1_dist),'r','LineWidth',3)
@@ -122,7 +122,7 @@ ylabel('d_{rp}(G_t,G_{t-1}) (normalized by maximum)')
 box on
 legend('RP1 Distance','RP2 Distance')
 
-figure(2)
+delta_cad_non_norm = figure(2);
 hold on
 for i=2:length(mondays)-1
 %     plot([mondays(i),mondays(i)+7],[RP1_dist(i),RP1_dist(i)]./max(RP1_dist),'r','LineWidth',3)
@@ -153,7 +153,7 @@ ylabel('d(G_t,G_{t-1}) (normalized by maximum)')
 box on
 legend('DeltaCon_0 Distance','CAD Distance')
 
-figure(3)
+RP_norm = figure(3);
 hold on
 for i=2:length(mondays)-1
     plot([mondays(i),mondays(i)+7],[RP1_dist_rel(i),RP1_dist_rel(i)]./max(RP1_dist_rel),'r','LineWidth',3)
@@ -183,7 +183,7 @@ ylabel('d_{rp}(G_t,G_{t-1})/Kf(G_{t-1}) (normalized by maximum)')
 box on
 legend('RP1 Distance','RP2 Distance')
 
-figure(4)
+delta_cad_norm = figure(4);
 hold on
 for i=2:length(mondays)-1
 %     plot([mondays(i),mondays(i)+7],[RP1_dist_rel(i),RP1_dist_rel(i)]./max(RP1_dist_rel),'r','LineWidth',3)
@@ -212,4 +212,16 @@ xticklabel_rotate(mondays(1:4:end),60,cellstr(datestr(mondays(1:4:end),2)))
 xlabel('Date')
 ylabel('d_{DC0}(G_t,G_{t-1})/||S_{t-1}^{1/2}||_F (normalized by maximum)')
 box on
-legend('DeltaCon_0 Distance')
+legend('DeltaCon_0 Distance','CAD Distance')
+
+if ~isdir('figures')
+    mkdir('figures')
+end
+
+saveas(RP_non_norm,'figures/Enron_RP_distances.fig')
+saveas(delta_cad_non_norm,'figures/Enron_Delta_CAD_distances.fig')
+saveas(RP_norm,'figures/Enron_RP_relative_distances.fig')
+saveas(delta_cad_norm,'figures/Enron_Delta_CAD_relative_distances.fig')
+
+
+

@@ -128,7 +128,7 @@ end
 % title('RP-1 distance between weeks, Reality Mining')
 %%
 
-figure
+RP_non_norm = figure;
 hold on
 for i=2:length(mondays)-1
 %     plot([mondays(i),mondays(i)+7],[RP1_dist(i),RP1_dist(i)],'k','LineWidth',2)
@@ -161,7 +161,7 @@ box on
 legend('RP1 Distance','RP2 Distance')
 % legend('edit distance')
 
-figure
+delta_cad_non_norm = figure;
 hold on
 for i=2:length(mondays)-1
 %     plot([mondays(i),mondays(i)+7],[RP1_dist(i),RP1_dist(i)],'k','LineWidth',2)
@@ -195,7 +195,7 @@ box on
 % legend('RP1 Distance','RP2 Distance','edit distance')
 legend('DeltaCon_0 Distance','CAD Distance')
 
-figure
+RP_norm = figure;
 hold on
 for i=2:length(mondays)-1
 %     plot([mondays(i),mondays(i)+7],[RP1_dist_rel(i),RP1_dist_rel(i)],'k','LineWidth',2)
@@ -227,7 +227,7 @@ box on
 legend('RP1 Distance','RP2 Distance')
 % legend('edit distance')
 
-figure
+delta_cad_norm = figure;
 hold on
 for i=2:length(mondays)-1
 % %     plot([mondays(i),mondays(i)+7],[RP1_dist_rel(i),RP1_dist_rel(i)],'k','LineWidth',2)
@@ -299,3 +299,12 @@ legend('DeltaCon_0 Distance','CAD Distance')
 % xticklabel_rotate(mondays,60,cellstr(datestr(mondays,2)))
 % xlabel('Date')
 % ylabel('d_{rp}(G_t,G_{t-1})/Kf(G_{t-1})')
+
+if ~isdir('figures')
+    mkdir('figures')
+end
+
+saveas(RP_non_norm,'figures/Reality_Mining_RP_distances.fig')
+saveas(delta_cad_non_norm,'figures/Reality_Mining_Delta_CAD_distances.fig')
+saveas(RP_norm,'figures/Reality_Mining_RP_relative_distances.fig')
+saveas(delta_cad_norm,'figures/Reality_Mining_Delta_CAD_relative_distances.fig')
